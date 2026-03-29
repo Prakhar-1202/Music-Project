@@ -1,0 +1,2050 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Soundwave</title>
+<link href="https://fonts.googleapis.com/css2?family=Clash+Display:wght@400;500;600;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --bg2: #111118;
+    --bg3: #1a1a26;
+    --surface: #16161f;
+    --surface2: #464662;
+    --border: rgba(255,255,255,0.06);
+    --accent: #7c3aed;
+    --accent2: #a855f7;
+    --accent3: #c084fc;
+    --neon: #e879f9;
+    --hero-glow-1: rgba(124,58,237,0.35);
+    --hero-glow-2: rgba(232,121,249,0.2);
+    --text: #f1f0ff;
+    --muted: #6b6b8a;
+    --muted2: rgba(241, 240, 255, 0.92);
+    --green: #4ade80;
+    --bar-h: 80px;
+    --sidebar-w: 260px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    height: 100vh;
+    overflow: hidden;
+    display: grid;
+    grid-template-rows: 1fr var(--bar-h);
+    grid-template-columns: var(--sidebar-w) 1fr;
+    grid-template-areas:
+      "sidebar main"
+      "bar bar";
+  }
+
+  /* ── THEMES (driven by chips) ── */
+  body[data-theme="music"] {
+    --accent: #7c3aed;
+    --accent2: #a855f7;
+    --accent3: #c084fc;
+    --neon: #e879f9;
+    --hero-glow-1: rgba(124,58,237,0.35);
+    --hero-glow-2: rgba(232,121,249,0.2);
+  }
+
+  /* Subtle, calmer */
+  body[data-theme="podcasts"],
+  body[data-theme="audiobooks"] {
+    --accent: #0ea5e9;   /* sky */
+    --accent2: #22c55e;  /* soft green */
+    --accent3: #67e8f9;  /* light cyan */
+    --neon: #5eead4;     /* mint */
+    --hero-glow-1: rgba(14,165,233,0.22);
+    --hero-glow-2: rgba(94,234,212,0.12);
+    --surface2: #1a2433;
+  }
+
+  /* Energetic, punchy */
+  body[data-theme="mixes"] {
+    --accent: #f97316;   /* orange */
+    --accent2: #ec4899;  /* pink */
+    --accent3: #f59e0b;  /* amber */
+    --neon: #fb7185;     /* rose */
+    --hero-glow-1: rgba(249,115,22,0.26);
+    --hero-glow-2: rgba(236,72,153,0.18);
+    --surface2: #2a1f2e;
+  }
+
+  /* ── Color Scheme (dark/light) ── */
+  body[data-scheme="light"] {
+    --bg: #f7f7ff;
+    --bg2: #ffffff;
+    --bg3: #eef0f6;
+    --surface: #f3f3fb;
+    --surface2: #e9e9f2;
+    --border: rgba(0,0,0,0.08);
+    --text: #0b0b12;
+    --muted: #5f5f72;
+    --muted2: rgba(11, 11, 18, 0.72);
+  }
+
+  /* ── VIEW SWITCH (Home ↔ Radio) ── */
+  .view {
+    animation-duration: 360ms;
+    animation-timing-function: cubic-bezier(.2,.8,.2,1);
+    animation-fill-mode: both;
+  }
+  .view.is-hidden { display: none; }
+  .view.anim-in { animation-name: view-in; }
+  .view.anim-out { animation-name: view-out; }
+
+  @keyframes view-in {
+    from { opacity: 0; transform: translateY(18px) scale(0.985); filter: blur(6px); }
+    to { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+  }
+  @keyframes view-out {
+    from { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+    to { opacity: 0; transform: translateY(-12px) scale(0.992); filter: blur(6px); }
+  }
+
+  /* ── EXPLORE (editorial layout) ── */
+  .explore { max-width: 1240px; margin: 0 auto; }
+
+  .explore-hero {
+    position: relative;
+    border-radius: 18px;
+    overflow: hidden;
+    min-height: 420px;
+    margin: 10px 0 36px;
+    background: var(--surface);
+    box-shadow: 0 24px 70px rgba(0,0,0,0.55);
+  }
+
+  .explore-hero-media { position: absolute; inset: 0; }
+  .explore-hero-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transform: scale(1.01);
+    transition: transform 0.7s ease;
+    filter: saturate(1.05) contrast(1.02);
+  }
+  .explore-hero:hover .explore-hero-img { transform: scale(1.06); }
+
+  .explore-hero-overlay {
+    position: absolute; inset: 0;
+    background:
+      linear-gradient(to top, rgba(10,10,15,0.92) 0%, rgba(10,10,15,0.55) 40%, rgba(10,10,15,0.10) 70%, transparent 100%),
+      radial-gradient(circle at 30% 25%, var(--hero-glow-2), transparent 55%),
+      radial-gradient(circle at 70% 75%, var(--hero-glow-1), transparent 55%);
+  }
+
+  .explore-hero-content {
+    position: absolute;
+    left: 28px;
+    bottom: 28px;
+    right: 28px;
+    max-width: 780px;
+  }
+
+  .explore-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 14px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: rgba(10,10,15,0.92);
+    background: linear-gradient(135deg, var(--accent3), var(--neon));
+    box-shadow: 0 10px 28px rgba(0,0,0,0.35);
+  }
+
+  .explore-hero-title {
+    font-family: 'Clash Display', sans-serif;
+    font-size: 52px;
+    line-height: 0.96;
+    letter-spacing: -1.6px;
+    margin: 14px 0 10px;
+  }
+  .explore-hero-accent {
+    background: linear-gradient(90deg, var(--text), var(--accent3));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .explore-hero-sub { color: var(--muted); font-size: 15px; max-width: 60ch; }
+
+  .explore-hero-actions { margin-top: 18px; display: flex; gap: 12px; flex-wrap: wrap; }
+  .explore-primary, .explore-secondary {
+    border: none;
+    cursor: pointer;
+    border-radius: 999px;
+    padding: 12px 18px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    transition: transform 0.2s, filter 0.2s, background 0.2s;
+  }
+  .explore-primary {
+    background: linear-gradient(135deg, var(--accent3), var(--accent));
+    color: rgba(10,10,15,0.92);
+  }
+  .explore-secondary {
+    background: rgba(255,255,255,0.08);
+    color: var(--muted2);
+  }
+  .explore-primary:hover, .explore-secondary:hover { transform: scale(1.05); filter: brightness(1.05); }
+
+  .explore-block { margin: 0 0 36px; }
+  .explore-rowhead { display:flex; align-items:baseline; justify-content:space-between; gap: 12px; margin: 0 0 18px; }
+  .explore-h3 { font-family: 'Clash Display', sans-serif; font-size: 22px; font-weight: 650; letter-spacing: -0.6px; }
+  .explore-link {
+    background: none; border: none; cursor: pointer;
+    color: var(--muted2);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    transition: color 0.15s;
+  }
+  .explore-link:hover { color: var(--accent3); }
+
+  .artist-row {
+    display:flex;
+    gap: 18px;
+    overflow-x: auto;
+    padding: 8px 4px 10px;
+    scrollbar-width: none;
+  }
+  .artist-row::-webkit-scrollbar { display: none; }
+
+  .artist-station { width: 128px; flex: 0 0 auto; text-align:center; cursor:pointer; }
+  .artist-ring {
+    width: 112px; height: 112px;
+    margin: 0 auto 10px;
+    border-radius: 999px;
+    padding: 4px;
+    background: rgba(255,255,255,0.06);
+    transition: transform 0.25s, box-shadow 0.25s, background 0.25s;
+  }
+  .artist-station:hover .artist-ring {
+    transform: translateY(-2px) scale(1.03);
+    background: rgba(255,255,255,0.10);
+    box-shadow: 0 0 0 2px rgba(255,255,255,0.06), 0 16px 40px rgba(0,0,0,0.55);
+  }
+  .artist-ring img { width:100%; height:100%; border-radius:999px; object-fit:cover; display:block; }
+  .artist-name { font-size: 13px; font-weight: 700; }
+  .artist-sub { font-size: 10px; letter-spacing: 1.6px; text-transform: uppercase; color: var(--muted); margin-top: 4px; }
+
+  .bento {
+    display:grid;
+    grid-template-columns: repeat(12, 1fr);
+    grid-template-rows: repeat(2, 220px);
+    gap: 14px;
+  }
+  .bento-tile {
+    position: relative;
+    border-radius: 18px;
+    overflow: hidden;
+    cursor: pointer;
+    background: rgba(255,255,255,0.05);
+  }
+  .bento-tile img { width:100%; height:100%; object-fit:cover; transition: transform 0.55s ease; transform: scale(1.02); }
+  .bento-tile:hover img { transform: scale(1.12); }
+  .bento-overlay { position:absolute; inset:0; background: linear-gradient(to top, rgba(0,0,0,0.78), rgba(0,0,0,0.15) 55%, transparent); }
+  .bento-label { position:absolute; left: 18px; bottom: 16px; right: 18px; }
+  .bento-title {
+    font-family: 'Clash Display', sans-serif;
+    font-style: italic;
+    font-weight: 800;
+    letter-spacing: -1px;
+    line-height: 1;
+  }
+  .bento-sub { margin-top: 6px; font-size: 12px; color: var(--muted); }
+
+  .bento-electronic { grid-column: 1 / span 6; grid-row: 1 / span 2; }
+  .bento-rock { grid-column: 7 / span 3; grid-row: 1 / span 1; }
+  .bento-lofi { grid-column: 10 / span 3; grid-row: 1 / span 1; }
+  .bento-classical { grid-column: 7 / span 6; grid-row: 2 / span 1; }
+
+  .bento-electronic .bento-title { font-size: 36px; }
+  .bento-rock .bento-title, .bento-lofi .bento-title, .bento-classical .bento-title { font-size: 22px; }
+
+  .local-list { display:flex; flex-direction:column; gap: 10px; }
+  .local-item {
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap: 14px;
+    padding: 14px 14px;
+    border-radius: 14px;
+    background: rgba(255,255,255,0.04);
+    transition: background 0.2s, transform 0.2s;
+    cursor: pointer;
+  }
+  .local-item:hover { background: rgba(255,255,255,0.07); transform: translateY(-1px); }
+  .local-left { display:flex; align-items:center; gap: 12px; min-width: 0; }
+  .local-icon {
+    width: 44px; height: 44px;
+    border-radius: 12px;
+    display:flex; align-items:center; justify-content:center;
+    background: rgba(255,255,255,0.08);
+    flex-shrink: 0;
+  }
+  .local-title { font-size: 14px; font-weight: 750; white-space: nowrap; overflow:hidden; text-overflow: ellipsis; }
+  .local-sub { font-size: 12px; color: var(--muted); white-space: nowrap; overflow:hidden; text-overflow: ellipsis; margin-top: 2px; }
+  .local-right { display:flex; align-items:center; gap: 12px; flex-shrink: 0; }
+  .local-badge {
+    font-size: 10px;
+    letter-spacing: 1.6px;
+    text-transform: uppercase;
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.06);
+    color: var(--muted2);
+  }
+  .local-mono { font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .local-play {
+    width: 38px; height: 38px;
+    border-radius: 999px;
+    border: none;
+    cursor: pointer;
+    background: rgba(255,255,255,0.08);
+    color: var(--muted2);
+    transition: transform 0.18s, background 0.18s;
+  }
+  .local-play:hover { transform: scale(1.06); background: linear-gradient(135deg, var(--accent3), var(--accent)); color: rgba(10,10,15,0.92); }
+
+  @media (max-width: 1100px) {
+    .explore-hero-title { font-size: 42px; }
+    .bento { grid-template-rows: repeat(3, 200px); }
+    .bento-electronic { grid-column: 1 / span 12; grid-row: 1 / span 1; }
+    .bento-rock { grid-column: 1 / span 6; grid-row: 2 / span 1; }
+    .bento-lofi { grid-column: 7 / span 6; grid-row: 2 / span 1; }
+    .bento-classical { grid-column: 1 / span 12; grid-row: 3 / span 1; }
+  }
+  @media (max-width: 720px) {
+    .explore-hero { min-height: 380px; }
+    .explore-hero-content { left: 18px; right: 18px; bottom: 18px; }
+    .explore-hero-title { font-size: 34px; }
+  }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    grid-area: sidebar;
+    background: var(--bg2);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .logo {
+    padding: 28px 24px 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .logo-icon {
+    width: 36px; height: 36px;
+    background: linear-gradient(135deg, var(--accent), var(--neon));
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .logo-icon svg { width: 20px; height: 20px; fill: white; }
+
+  .logo-text {
+    font-family: 'Clash Display', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    background: linear-gradient(135deg, #fff 30%, var(--accent3));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .nav {
+    padding: 0 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .nav-label {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 14px 12px 6px;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--muted2);
+    text-decoration: none;
+  }
+
+  .nav-item:hover { background: var(--bg3); color: var(--text); }
+
+  .nav-item.active {
+    background: linear-gradient(135deg, rgba(124,58,237,0.25), rgba(232,121,249,0.1));
+    color: var(--text);
+    border: 1px solid rgba(124,58,237,0.3);
+  }
+
+  .nav-item.active svg { color: var(--accent3); }
+
+  .nav-item svg {
+    width: 18px; height: 18px;
+    flex-shrink: 0;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .library {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 12px 16px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--bg3) transparent;
+  }
+
+  .library-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+
+  .library-item:hover { background: var(--bg3); }
+
+  .lib-thumb {
+    width: 40px; height: 40px;
+    border-radius: 6px;
+    flex-shrink: 0;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .lib-thumb img { width: 100%; height: 100%; object-fit: cover; }
+
+  .lib-info { flex: 1; min-width: 0; }
+
+  .lib-title {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .lib-sub {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  /* ── MAIN ── */
+  .main {
+    grid-area: main;
+    overflow-y: auto;
+    background: var(--bg);
+    scrollbar-width: thin;
+    scrollbar-color: var(--bg3) transparent;
+    position: relative;
+  }
+
+  .main-header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 32px;
+    background: linear-gradient(to bottom, rgba(10,10,15,0.95) 60%, transparent);
+    backdrop-filter: blur(12px);
+  }
+
+  .nav-arrows {
+    display: flex;
+    gap: 8px;
+  }
+
+  .nav-btn {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: all 0.15s;
+    color: var(--muted2);
+  }
+
+  .nav-btn:hover { background: var(--surface2); color: var(--text); }
+  .nav-btn svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+  .header-right { display: flex; align-items: center; gap: 12px; }
+
+  .search-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 30px;
+    padding: 8px 16px;
+    width: 220px;
+    transition: all 0.2s;
+  }
+
+  .search-bar:focus-within {
+    border-color: rgba(124,58,237,0.5);
+    box-shadow: 0 0 0 3px rgba(124,58,237,0.1);
+  }
+
+  .search-bar svg { width: 14px; height: 14px; color: var(--muted); stroke: currentColor; fill: none; stroke-width: 2; flex-shrink: 0; }
+  .search-bar input { background: none; border: none; outline: none; color: var(--text); font-size: 13px; font-family: inherit; width: 100%; }
+  .search-bar input::placeholder { color: var(--muted); }
+
+  .avatar {
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--neon));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 600;
+    cursor: pointer;
+    letter-spacing: -0.5px;
+  }
+
+  .theme-toggle {
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--muted2);
+    border-radius: 12px;
+    padding: 8px 10px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 700;
+    transition: all 0.15s;
+  }
+  .theme-toggle:hover { background: var(--surface2); color: var(--text); }
+
+  /* ── HERO ── */
+  .hero {
+    padding: 0 32px 40px;
+    position: relative;
+  }
+
+  .hero-bg {
+    position: absolute;
+    top: -60px; left: 0; right: 0;
+    height: 380px;
+    background: radial-gradient(ellipse at 40% 0%, var(--hero-glow-1) 0%, transparent 65%),
+                radial-gradient(ellipse at 80% 20%, var(--hero-glow-2) 0%, transparent 50%);
+    pointer-events: none;
+  }
+
+  .greeting {
+    font-family: 'Clash Display', sans-serif;
+    font-size: 36px;
+    font-weight: 700;
+    letter-spacing: -1px;
+    margin-bottom: 6px;
+    position: relative;
+  }
+
+  .greeting span {
+    background: linear-gradient(90deg, var(--text), var(--accent3));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .greeting-sub {
+    color: var(--muted2);
+    font-size: 14px;
+    margin-bottom: 32px;
+  }
+
+  /* ── FEATURED CARDS ── */
+  .featured-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 40px;
+    position: relative;
+  }
+
+  .featured-card {
+    border-radius: 16px;
+    overflow: hidden;
+    position: relative;
+    aspect-ratio: 16/9;
+    cursor: pointer;
+    transition: transform 0.25s, box-shadow 0.25s;
+  }
+
+  .featured-card:hover { transform: scale(1.02); box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+
+  .featured-card.large { grid-column: span 2; }
+
+  .card-bg {
+    position: absolute; inset: 0;
+    background-size: cover;
+    background-position: center;
+    transition: transform 0.4s;
+  }
+
+  .featured-card:hover .card-bg { transform: scale(1.06); }
+
+  .card-overlay {
+    position: absolute; inset: 0;
+    background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.2) 50%, transparent 100%);
+  }
+
+  .card-content {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    padding: 20px;
+  }
+
+  .card-tag {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: var(--accent3);
+    margin-bottom: 6px;
+  }
+
+  .card-title {
+    font-family: 'Clash Display', sans-serif;
+    font-size: 20px;
+    font-weight: 600;
+    line-height: 1.2;
+    margin-bottom: 4px;
+  }
+
+  .featured-card.large .card-title { font-size: 28px; }
+
+  .card-sub { font-size: 12px; color: rgba(255,255,255,0.6); }
+
+  .card-play {
+    position: absolute;
+    top: 16px; right: 16px;
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.1);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,0.2);
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0;
+    transition: opacity 0.2s, transform 0.2s;
+    transform: scale(0.85);
+  }
+
+  .featured-card:hover .card-play { opacity: 1; transform: scale(1); }
+  .card-play svg { width: 16px; height: 16px; fill: white; margin-left: 2px; }
+
+  /* ── SECTION ── */
+  .section { padding: 0 32px 40px; }
+
+  .section-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+
+  .section-title {
+    font-family: 'Clash Display', sans-serif;
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.5px;
+  }
+
+  .section-link {
+    font-size: 12px;
+    color: var(--muted);
+    cursor: pointer;
+    transition: color 0.15s;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    font-weight: 500;
+  }
+
+  .section-link:hover { color: var(--accent3); }
+
+  /* ── ALBUM GRID ── */
+  .album-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 16px;
+  }
+
+  .album-card {
+    cursor: pointer;
+    transition: transform 0.2s;
+  }
+
+  .album-card:hover { transform: translateY(-4px); }
+
+  .album-thumb {
+    width: 100%;
+    aspect-ratio: 1;
+    border-radius: 12px;
+    overflow: hidden;
+    position: relative;
+    margin-bottom: 10px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  }
+
+  .album-thumb-bg {
+    width: 100%; height: 100%;
+    background-size: cover;
+    background-position: center;
+    transition: transform 0.3s;
+  }
+
+  .album-card:hover .album-thumb-bg { transform: scale(1.05); }
+
+  .album-play-btn {
+    position: absolute;
+    bottom: 8px; right: 8px;
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: all 0.2s;
+    box-shadow: 0 4px 16px rgba(124,58,237,0.5);
+  }
+
+  .album-card:hover .album-play-btn { opacity: 1; transform: translateY(0); }
+  .album-play-btn svg { width: 14px; height: 14px; fill: white; margin-left: 2px; }
+
+  .album-name {
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 3px;
+  }
+
+  .album-artist {
+    font-size: 11px;
+    color: var(--muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* ── TRACK LIST ── */
+  .track-list { display: flex; flex-direction: column; gap: 2px; }
+
+  .track-row {
+    display: grid;
+    grid-template-columns: 40px 1fr 120px 80px 40px;
+    align-items: center;
+    padding: 8px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.15s;
+    gap: 12px;
+  }
+
+  .track-row:hover { background: var(--surface); }
+  .track-row.playing { background: rgba(124,58,237,0.12); }
+
+  .track-num {
+    font-size: 13px;
+    color: var(--muted);
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .track-row.playing .track-num { color: var(--accent3); }
+
+  .track-info { display: flex; align-items: center; gap: 12px; min-width: 0; }
+
+  .track-art {
+    width: 40px; height: 40px;
+    border-radius: 6px;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
+  .track-art-bg {
+    width: 100%; height: 100%;
+    background-size: cover;
+    background-position: center;
+  }
+
+  .track-details { min-width: 0; }
+
+  .track-name {
+    font-size: 14px;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .track-row.playing .track-name { color: var(--accent3); }
+
+  .track-artist {
+    font-size: 12px;
+    color: var(--muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-top: 2px;
+  }
+
+  .track-album {
+    font-size: 12px;
+    color: var(--muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .track-duration {
+    font-size: 12px;
+    color: var(--muted);
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .track-heart {
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0;
+    transition: opacity 0.15s;
+    color: var(--muted);
+  }
+
+  .track-heart svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2; }
+  .track-heart.liked svg { fill: var(--neon); stroke: var(--neon); }
+  .track-row:hover .track-heart { opacity: 1; }
+
+  /* ── PLAYBAR ── */
+  .playbar {
+    grid-area: bar;
+    background: var(--bg2);
+    border-top: 1px solid var(--border);
+    display: grid;
+    grid-template-columns: 1fr 2fr 1fr;
+    align-items: center;
+    padding: 0 24px;
+    gap: 16px;
+    position: relative;
+    z-index: 100;
+  }
+
+  .now-playing { display: flex; align-items: center; gap: 12px; }
+
+  .now-art {
+    width: 48px; height: 48px;
+    border-radius: 8px;
+    overflow: hidden;
+    flex-shrink: 0;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+  }
+
+  .now-art-bg {
+    width: 100%; height: 100%;
+    background-size: cover;
+    background-position: center;
+    animation: spin-slow 20s linear infinite;
+    animation-play-state: paused;
+  }
+
+  .now-art-bg.playing { animation-play-state: running; }
+
+  @keyframes spin-slow {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  .now-info { min-width: 0; }
+  .now-title { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .now-artist { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+  .now-heart { margin-left: 8px; color: var(--muted); cursor: pointer; flex-shrink: 0; }
+  .now-heart svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; display: block; }
+  .now-heart.liked svg { fill: var(--neon); stroke: var(--neon); }
+
+  .player-center { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+
+  .player-controls { display: flex; align-items: center; gap: 8px; }
+
+  .ctrl-btn {
+    background: none; border: none;
+    color: var(--muted2);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    transition: all 0.15s;
+    padding: 0;
+  }
+
+  .ctrl-btn:hover { color: var(--text); background: var(--bg3); }
+  .ctrl-btn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+  .ctrl-btn.active { color: var(--accent3); }
+
+  .play-btn {
+    width: 42px; height: 42px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border: none;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+    box-shadow: 0 4px 20px rgba(124,58,237,0.5);
+  }
+
+  .play-btn:hover { transform: scale(1.08); box-shadow: 0 6px 28px rgba(124,58,237,0.65); }
+  .play-btn svg { width: 18px; height: 18px; fill: white; margin-left: 2px; }
+  .play-btn.paused svg { margin-left: 0; }
+
+  .progress-bar-wrap { display: flex; align-items: center; gap: 10px; width: 100%; }
+
+  .time { font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; flex-shrink: 0; }
+
+  .progress-track {
+    flex: 1;
+    height: 4px;
+    background: var(--bg3);
+    border-radius: 2px;
+    position: relative;
+    cursor: pointer;
+    overflow: visible;
+  }
+
+  .progress-track:hover { height: 6px; }
+
+  .progress-fill {
+    height: 100%;
+    border-radius: 2px;
+    background: linear-gradient(90deg, var(--accent), var(--accent3));
+    position: relative;
+    transition: width 0.5s linear;
+  }
+
+  .progress-thumb {
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    background: white;
+    position: absolute;
+    right: -6px; top: 50%;
+    transform: translateY(-50%);
+    opacity: 0;
+    transition: opacity 0.15s;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+  }
+
+  .progress-track:hover .progress-thumb { opacity: 1; }
+
+  .player-right { display: flex; align-items: center; gap: 6px; justify-content: flex-end; }
+
+  .vol-wrap { display: flex; align-items: center; gap: 8px; width: 130px; }
+
+  .vol-track {
+    flex: 1;
+    height: 4px;
+    background: var(--bg3);
+    border-radius: 2px;
+    cursor: pointer;
+    position: relative;
+  }
+
+  .vol-fill {
+    width: 70%;
+    height: 100%;
+    border-radius: 2px;
+    background: linear-gradient(90deg, var(--accent), var(--accent3));
+  }
+
+  /* ── EQUALIZER ── */
+  .eq-bars {
+    display: flex; align-items: flex-end; gap: 2px;
+    height: 14px;
+    margin-left: 4px;
+  }
+
+  .eq-bar {
+    width: 3px;
+    background: var(--accent3);
+    border-radius: 1px;
+    animation: eq-bounce 0.6s ease-in-out infinite alternate;
+  }
+
+  .eq-bar:nth-child(2) { animation-delay: 0.15s; }
+  .eq-bar:nth-child(3) { animation-delay: 0.05s; }
+  .eq-bar:nth-child(4) { animation-delay: 0.25s; }
+
+  @keyframes eq-bounce {
+    from { height: 4px; }
+    to { height: 14px; }
+  }
+
+  /* ── FADE IN ── */
+  @keyframes fade-up {
+    from { opacity: 0; transform: translateY(18px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .hero { animation: fade-up 0.5s ease both; }
+  .featured-grid { animation: fade-up 0.5s 0.1s ease both; }
+  .section:nth-child(3) { animation: fade-up 0.5s 0.2s ease both; }
+  .section:nth-child(4) { animation: fade-up 0.5s 0.3s ease both; }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--bg3); border-radius: 2px; }
+
+  /* ── CHIPS ── */
+  .chips { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
+  .chip {
+    padding: 6px 16px;
+    border-radius: 30px;
+    font-size: 12px;
+    font-weight: 500;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    cursor: pointer;
+    transition: all 0.15s;
+    color: var(--muted2);
+  }
+  .chip:hover { border-color: var(--accent); color: var(--text); }
+  .chip.active { background: var(--accent); border-color: var(--accent); color: white; }
+
+  /* ── WAVEFORM DECORATION ── */
+  .waveform-deco {
+    position: absolute;
+    right: 32px;
+    top: -10px;
+    opacity: 0.15;
+    display: flex; align-items: center; gap: 3px;
+  }
+
+  .w-bar {
+    width: 4px;
+    background: var(--accent3);
+    border-radius: 2px;
+  }
+</style>
+</head>
+<body>
+<script>
+  // Default theme on load
+  document.addEventListener('DOMContentLoaded', () => {
+      document.body.dataset.theme = document.body.dataset.theme || 'music';
+      const savedScheme = localStorage.getItem('soundwave-scheme');
+      document.body.dataset.scheme = savedScheme || document.body.dataset.scheme || 'light';
+  });
+</script>
+
+<!-- ── SIDEBAR ── -->
+<aside class="sidebar">
+  <div class="logo">
+    <div class="logo-icon">
+      <svg viewBox="0 0 24 24"><path d="M9 18V5l12-2v13M9 18c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2zm12-2c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2z"/></svg>
+    </div>
+    <span class="logo-text">Soundwave</span>
+  </div>
+
+  <nav class="nav">
+    <div class="nav-label">Discover</div>
+    <a class="nav-item active" id="sidebarHome" role="button" tabindex="0" aria-label="Home">
+      <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Home
+    </a>
+    <a class="nav-item" id="sidebarSearch" role="button" tabindex="0" aria-label="Search">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      Search
+    </a>
+    <a class="nav-item">
+      <svg viewBox="0 0 24 24"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 00-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0020 4.77 5.07 5.07 0 0019.91 1S18.73.65 16 2.48a13.38 13.38 0 00-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 005 4.77a5.44 5.44 0 00-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 009 18.13V22"/></svg>
+      Charts
+    </a>
+    <a class="nav-item" id="sidebarExplore" role="button" tabindex="0" aria-label="Explore">
+      <svg viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="10"/>
+        <path d="M14.5 9.5l-2 5-5 2 2-5 5-2z"/>
+      </svg>
+      Explore
+    </a>
+    <a class="nav-item" id="sidebarRadio" role="button" tabindex="0" aria-label="Radio">
+      <svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+      Radio
+    </a>
+
+    <div class="nav-label">Library</div>
+    <a class="nav-item">
+      <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+      Liked Songs
+    </a>
+    <a class="nav-item">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+      New Playlist
+    </a>
+  </nav>
+
+  <div class="library">
+    <div class="nav-label" style="padding: 14px 12px 10px;">Playlists</div>
+
+    <div class="library-item">
+      <div class="lib-thumb">
+        <div style="width:100%;height:100%;background:linear-gradient(135deg,#7c3aed,#db2777);"></div>
+      </div>
+      <div class="lib-info">
+        <div class="lib-title">Late Night Drive</div>
+        <div class="lib-sub">Playlist · 34 songs</div>
+      </div>
+    </div>
+
+    <div class="library-item">
+      <div class="lib-thumb">
+        <div style="width:100%;height:100%;background:linear-gradient(135deg,#0ea5e9,#6366f1);"></div>
+      </div>
+      <div class="lib-info">
+        <div class="lib-title">Focus Flow</div>
+        <div class="lib-sub">Playlist · 52 songs</div>
+      </div>
+    </div>
+
+    <div class="library-item">
+      <div class="lib-thumb">
+        <div style="width:100%;height:100%;background:linear-gradient(135deg,#f59e0b,#ef4444);"></div>
+      </div>
+      <div class="lib-info">
+        <div class="lib-title">Workout Beats</div>
+        <div class="lib-sub">Playlist · 28 songs</div>
+      </div>
+    </div>
+
+    <div class="library-item">
+      <div class="lib-thumb">
+        <div style="width:100%;height:100%;background:linear-gradient(135deg,#10b981,#0ea5e9);"></div>
+      </div>
+      <div class="lib-info">
+        <div class="lib-title">Sunday Morning</div>
+        <div class="lib-sub">Playlist · 19 songs</div>
+      </div>
+    </div>
+
+    <div class="library-item">
+      <div class="lib-thumb">
+        <div style="width:100%;height:100%;background:linear-gradient(135deg,#a855f7,#ec4899);"></div>
+      </div>
+      <div class="lib-info">
+        <div class="lib-title">Chill Vibes</div>
+        <div class="lib-sub">Playlist · 41 songs</div>
+      </div>
+    </div>
+
+    <div class="library-item">
+      <div class="lib-thumb">
+        <div style="width:100%;height:100%;background:linear-gradient(135deg,#f43f5e,#f97316);"></div>
+      </div>
+      <div class="lib-info">
+        <div class="lib-title">90s Throwback</div>
+        <div class="lib-sub">Playlist · 67 songs</div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- ── MAIN ── -->
+<main class="main">
+  <header class="main-header">
+    <div class="nav-arrows">
+      <button class="nav-btn">
+        <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <button class="nav-btn">
+        <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+    </div>
+    <div class="header-right">
+      <div class="search-bar">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input id="searchInput" type="text" placeholder="Artists, songs, albums...">
+      </div>
+      <div class="avatar">KP</div>
+      <button id="themeToggle" class="theme-toggle" type="button" aria-label="Toggle theme">Light</button>
+    </div>
+  </header>
+
+  <div id="homeView" class="view">
+  <!-- Hero -->
+  <div class="hero">
+    <div class="hero-bg"></div>
+    <div style="position:relative;">
+      <p class="greeting-sub">Good evening</p>
+      <h1 class="greeting">Your <span>Soundtrack</span> Awaits</h1>
+
+      <div class="chips">
+        <div class="chip active">All</div>
+        <div class="chip">Music</div>
+        <div class="chip">Podcasts</div>
+        <div class="chip">Audiobooks</div>
+        <div class="chip">Mixes</div>
+      </div>
+
+      <div class="featured-grid" style="position:relative;">
+        <div class="waveform-deco" id="waveDeco"></div>
+
+        <!-- Large card -->
+        <div class="featured-card large" onclick="playTrack(0)">
+          <div class="card-bg" style="background-image:url('https://lh3.googleusercontent.com/aida-public/AB6AXuAU3Bper3T5AOeshwrHOg_Avau5dK-z8ObKXnW3u7jAkjdQ35Ha5hQzDTHkRINNLrWDn3RbO1eM1ZF8JfeceERDVbjHjtC1hRos37D4uTfCZeXHe7l5y07g3ztRm-zrIZBzsyU1y_4Z9mV6AEQPzbRC7Wx_LMBR18PJFxvuNKwyd7wS1kBRbFAk4ugg5roeqHS0U335FXXVzv41AWM_AG8d_LBXlp5j51JigZc5nrcamaHs1rkssaMVuoYZiwKObhtJAuMlnA8wKtjx');"></div>
+          <div style="position:absolute;inset:0;background:radial-gradient(circle at 70% 50%, rgba(196,132,252,0.3) 0%, transparent 60%);"></div>
+          <div class="card-overlay"></div>
+          <div class="card-content">
+            <div class="card-tag">🔥 Featured</div>
+            <div class="card-title">Neon Nights</div>
+            <div class="card-sub">The Midnight · Synthwave · 2024</div>
+          </div>
+          <div class="card-play">
+            <svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          </div>
+        </div>
+
+        <!-- Small card 1 -->
+        <div class="featured-card" onclick="playTrack(1)">
+          <div class="card-bg" style="background-image:url('https://lh3.googleusercontent.com/aida-public/AB6AXuCIYIfyYaQkRcTmK6NitdMQ7PjopNn9ias-A-8K2BrTb13BZsIacLo1tNgn96RS2-e4gAzb4sf-f1I1PjMIlEJWMNjXnBgf02Ef2FTnLtTl61Z99ufa6_MEV4UX4Duqz4WDi1wYWppodQQbegQKgkQ2vpVrAQOH1y9_63A2hevvZES28CgnaV8KzK-Zvzj5A5jMohYOQwpVIgcqM6YNYz-C44jDznw2hmIFBddz-48Dfce8fbkSrWZLBuHgwDUmDA9SNIo5E8jh7fqE');"></div>
+          <div style="position:absolute;inset:0;background:radial-gradient(circle at 30% 70%, rgba(52,211,153,0.3) 0%, transparent 60%);"></div>
+          <div class="card-overlay"></div>
+          <div class="card-content">
+            <div class="card-tag">🌿 Trending</div>
+            <div class="card-title">Forest Rain</div>
+            <div class="card-sub">Ambient · Relaxation</div>
+          </div>
+          <div class="card-play">
+            <svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Albums Section -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title">New Releases</div>
+      <div class="section-link">See all →</div>
+    </div>
+    <div class="album-grid">
+      <div class="album-card" onclick="playTrack(0)">
+        <div class="album-thumb">
+          <div class="album-thumb-bg" style="background-image:url('https://lh3.googleusercontent.com/aida-public/AB6AXuB0xWADsGK1doddwUBDh74UvzL4LGYY3IDJ-4VTSjraO4EiFvsOqxcfx8hjAHBtzn8UfSiPzI8bxMY8aqNFUXHlcUB7eqX8ENwtsIZDarME4WT5BacqkEvRv_vMUdfoBgGkdsfB2wMe-TeLWM5dWA2kwAA6-uBNzsDy51YYtlWQfAWBDfFA0GaS0h5JGbm65NjwYSdMAUPZBHC7CnJ_LhWPYYqFxMIYyxpGXf0xX14al299nSPlf5zQ6kMqRL0EcXGLoadkewyH3v2Z');"></div>
+          <div class="album-play-btn"><svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>
+        </div>
+        <div class="album-name">Neon Nights</div>
+        <div class="album-artist">The Midnight</div>
+      </div>
+      <div class="album-card" onclick="playTrack(1)">
+        <div class="album-thumb">
+          <div class="album-thumb-bg" style="background-image:url('https://lh3.googleusercontent.com/aida-public/AB6AXuCxBw2pPUJz_QAwVOciWJ6On5ik6-4jq7FE43HelUgFyp8pw_OMeJB5EuyvCpZdPvjJ_6R4D_p5yOy5GkrunxsvQgt3SvlaaDO7-YiH7vT9tkKg_z2PSipsG2R5CkMesxPJ144Q6BPcgN7mZZgS0FI_5TlfJuj_1i3G3iknVFx3sAVGb3MyKSW2BG4A8rYBRoPkxcOyXHkEwXGT-_FvpQZiJalGtMFHpGDaf2Jh9Xnt_spMAg7VsXiaNVpCC0BdFhWt3kGnBvMJ4kvZ');"></div>
+          <div class="album-play-btn"><svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>
+        </div>
+        <div class="album-name">Ocean Drive</div>
+        <div class="album-artist">Duke Dumont</div>
+      </div>
+      <div class="album-card" onclick="playTrack(2)">
+        <div class="album-thumb">
+          <div class="album-thumb-bg" style="background-image:url('https://lh3.googleusercontent.com/aida-public/AB6AXuDUt37VuJpy4P6eDLBMBEG74zds16QWSa6um1_RvDadJiQDxdE8s345-4wIJLf1GOeqZfdAogcz9q6QvBUvSBNsM3_3643e_hC9rSy_p03FD7bjjspTZIBBIpPVwvK4Rh9gti-Vf0WiWCWukz7C0cNMSQ6FvEiqIgPfkU_cxzhWSjIhS9ncM5zePwTWkPSFAnv88QjLHZjQSYAopIL58da39deUPQfzQmpqd9H9gV3eEPpnX2lndQWWIZudrXB_MuAL-zNdOLmRCM9o');"></div>
+          <div class="album-play-btn"><svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>
+        </div>
+        <div class="album-name">Wildfire</div>
+        <div class="album-artist">Lana Del Rey</div>
+      </div>
+      <div class="album-card" onclick="playTrack(3)">
+        <div class="album-thumb">
+          <div class="album-thumb-bg" style="background-image:url('https://lh3.googleusercontent.com/aida-public/AB6AXuAmgYVU3n0SS8k-zHmIWIxJKFWpI73pGeHkJ8dIxn6Mdow_D6HyUE4D9jwPTbXKKuirm9hASCCj2pG2fXFiv_xFHNE9JOVQfkhFyKtqQQpZIo3LtO8VvQkHuj8OYAW4wLza1Z3LG9Yk1mqmFht30fU6qaTewQ7XQvyPKwHsOKA7ECOA8EUv2mZxSnabo_RhPmF6aogwpWXPXcuqAAsTPqhyZ5Q4DhPyuhCWJAM2ZpEvmumYgpuADUOEfsU0WGjRpWInh0BgH2ajE0Lq');"></div>
+          <div class="album-play-btn"><svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>
+        </div>
+        <div class="album-name">Verdant</div>
+        <div class="album-artist">Bonobo</div>
+      </div>
+      <div class="album-card" onclick="playTrack(4)">
+        <div class="album-thumb">
+          <div class="album-thumb-bg" style="background-image:url('https://lh3.googleusercontent.com/aida-public/AB6AXuB6CskkqKHVbu0z3W___zqovgYzNQzwGNdfXrME9_V1lEiPNAYk2nihG9SBzVqTvvmFj1BXiq5HWHJwdhogbTsEAyZnmzz0S4rsucKaRA5Ufb7Y-uhE1sDRSbV3ekOvNholfsC5rCg11hm8j2YqUcre4YynzBUiA75xjN9jFvkOIHzsjavpM4GA0Db9TDco3qhMwrj6oiFvTRSEVYt7rKIIaG3OKySxC9Y3GyaG0n4kCqVKNk485RCG6aOdbUqrihvE2dWLeW_Wxr9P');"></div>
+          <div class="album-play-btn"><svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>
+        </div>
+        <div class="album-name">Golden Hour</div>
+        <div class="album-artist">Kacey Musgraves</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tracks Section -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title">Trending Now</div>
+      <div class="section-link">See all →</div>
+    </div>
+    <div class="track-list">
+      <div class="track-row playing" onclick="playTrack(0)">
+        <div class="track-num">
+          <div class="eq-bars">
+            <div class="eq-bar"></div>
+            <div class="eq-bar"></div>
+            <div class="eq-bar"></div>
+            <div class="eq-bar"></div>
+          </div>
+        </div>
+        <div class="track-info">
+          <div class="track-art"><div class="track-art-bg" style="background:linear-gradient(135deg,#4c1d95,#7c3aed);"></div></div>
+          <div class="track-details">
+            <div class="track-name">Neon Nights</div>
+            <div class="track-artist">The Midnight</div>
+          </div>
+        </div>
+        <div class="track-album">Synthwave Dreams</div>
+        <div class="track-duration">3:47</div>
+        <div class="track-heart liked"><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg></div>
+      </div>
+      <div class="track-row" onclick="playTrack(1)">
+        <div class="track-num">2</div>
+        <div class="track-info">
+          <div class="track-art"><div class="track-art-bg" style="background:linear-gradient(135deg,#0c4a6e,#0ea5e9);"></div></div>
+          <div class="track-details">
+            <div class="track-name">Ocean Drive</div>
+            <div class="track-artist">Duke Dumont</div>
+          </div>
+        </div>
+        <div class="track-album">Ocean Drive EP</div>
+        <div class="track-duration">4:12</div>
+        <div class="track-heart"><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg></div>
+      </div>
+      <div class="track-row" onclick="playTrack(2)">
+        <div class="track-num">3</div>
+        <div class="track-info">
+          <div class="track-art"><div class="track-art-bg" style="background:linear-gradient(135deg,#7f1d1d,#dc2626);"></div></div>
+          <div class="track-details">
+            <div class="track-name">Wildfire</div>
+            <div class="track-artist">Lana Del Rey</div>
+          </div>
+        </div>
+        <div class="track-album">Chemtrails EP</div>
+        <div class="track-duration">5:02</div>
+        <div class="track-heart"><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg></div>
+      </div>
+      <div class="track-row" onclick="playTrack(3)">
+        <div class="track-num">4</div>
+        <div class="track-info">
+          <div class="track-art"><div class="track-art-bg" style="background:linear-gradient(135deg,#064e3b,#10b981);"></div></div>
+          <div class="track-details">
+            <div class="track-name">Verdant</div>
+            <div class="track-artist">Bonobo</div>
+          </div>
+        </div>
+        <div class="track-album">Fragments</div>
+        <div class="track-duration">6:18</div>
+        <div class="track-heart"><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg></div>
+      </div>
+      <div class="track-row" onclick="playTrack(4)">
+        <div class="track-num">5</div>
+        <div class="track-info">
+          <div class="track-art"><div class="track-art-bg" style="background:linear-gradient(135deg,#78350f,#f59e0b);"></div></div>
+          <div class="track-details">
+            <div class="track-name">Golden Hour</div>
+            <div class="track-artist">Kacey Musgraves</div>
+          </div>
+        </div>
+        <div class="track-album">Golden Hour</div>
+        <div class="track-duration">3:35</div>
+        <div class="track-heart liked"><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg></div>
+      </div>
+      <div class="track-row" onclick="playTrack(5)">
+        <div class="track-num">6</div>
+        <div class="track-info">
+          <div class="track-art"><div class="track-art-bg" style="background:linear-gradient(135deg,#1f2937,#6366f1);"></div></div>
+          <div class="track-details">
+            <div class="track-name">Midnight City Lights</div>
+            <div class="track-artist">M83</div>
+          </div>
+        </div>
+        <div class="track-album">Hurry Up, We're Dreaming</div>
+        <div class="track-duration">4:03</div>
+        <div class="track-heart"><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg></div>
+      </div>
+      <div class="track-row" onclick="playTrack(6)">
+        <div class="track-num">7</div>
+        <div class="track-info">
+          <div class="track-art"><div class="track-art-bg" style="background:linear-gradient(135deg,#111827,#f97316);"></div></div>
+          <div class="track-details">
+            <div class="track-name">Sunset Boulevard</div>
+            <div class="track-artist">Glass Animals</div>
+          </div>
+        </div>
+        <div class="track-album">Dreamland</div>
+        <div class="track-duration">3:18</div>
+        <div class="track-heart"><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg></div>
+      </div>
+      <div class="track-row" onclick="playTrack(7)">
+        <div class="track-num">8</div>
+        <div class="track-info">
+          <div class="track-art"><div class="track-art-bg" style="background:linear-gradient(135deg,#312e81,#22c55e);"></div></div>
+          <div class="track-details">
+            <div class="track-name">Pulse Runner</div>
+            <div class="track-artist">Kavinsky</div>
+          </div>
+        </div>
+        <div class="track-album">OutRun</div>
+        <div class="track-duration">3:58</div>
+        <div class="track-heart liked"><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg></div>
+      </div>
+      <div class="track-row" onclick="playTrack(8)">
+        <div class="track-num">9</div>
+        <div class="track-info">
+          <div class="track-art"><div class="track-art-bg" style="background:linear-gradient(135deg,#0f766e,#06b6d4);"></div></div>
+          <div class="track-details">
+            <div class="track-name">Low Tide</div>
+            <div class="track-artist">Tycho</div>
+          </div>
+        </div>
+        <div class="track-album">Awake</div>
+        <div class="track-duration">4:26</div>
+        <div class="track-heart"><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg></div>
+      </div>
+      <div class="track-row" onclick="playTrack(9)">
+        <div class="track-num">10</div>
+        <div class="track-info">
+          <div class="track-art"><div class="track-art-bg" style="background:linear-gradient(135deg,#7c2d12,#fb7185);"></div></div>
+          <div class="track-details">
+            <div class="track-name">Afterglow</div>
+            <div class="track-artist">Tove Lo</div>
+          </div>
+        </div>
+        <div class="track-album">Sunshine Kitty</div>
+        <div class="track-duration">3:24</div>
+        <div class="track-heart"><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg></div>
+      </div>
+    </div>
+  </div>
+  </div>
+
+  <div id="radioView" class="view is-hidden">
+    <div class="section" style="padding-top: 6px;">
+      <div class="section-header">
+        <div class="section-title">Radio</div>
+        <div class="section-link">On air →</div>
+      </div>
+
+      <div style="display:grid;grid-template-columns: 1.2fr 0.8fr;gap:16px;align-items:start;">
+        <div style="border:1px solid var(--border);background:linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));border-radius:16px;overflow:hidden;position:relative;min-height:220px;">
+          <div style="position:absolute;inset:0;background:radial-gradient(circle at 30% 20%, var(--hero-glow-2), transparent 55%), radial-gradient(circle at 70% 80%, var(--hero-glow-1), transparent 55%);opacity:0.9;"></div>
+          <div style="position:relative;padding:18px 18px 16px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;">
+              <div>
+                <div style="font-size:11px;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted2);">Live station</div>
+                <div style="font-family:'Clash Display',sans-serif;font-size:24px;font-weight:650;letter-spacing:-0.6px;margin-top:2px;">Soundwave FM</div>
+              </div>
+              <button class="play-btn" style="width:46px;height:46px;" onclick="startRadio()">
+                <svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              </button>
+            </div>
+            <div style="color:var(--muted2);font-size:13px;max-width:60ch;">
+              Continuous picks based on what’s trending. Tap Play to hop to a random track.
+            </div>
+          </div>
+        </div>
+
+        <div style="border:1px solid var(--border);background:var(--surface);border-radius:16px;padding:16px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+            <div style="font-size:12px;font-weight:600;letter-spacing:0.6px;text-transform:uppercase;color:var(--muted2);">Up next</div>
+            <div style="font-size:12px;color:var(--muted2);" id="radioHint">Random queue</div>
+          </div>
+          <div class="track-list" style="gap:6px;">
+            <div class="track-row" onclick="playTrack(1)"><div class="track-num">1</div><div class="track-info"><div class="track-art"><div class="track-art-bg" style="background:linear-gradient(135deg,#0c4a6e,#0ea5e9);"></div></div><div class="track-details"><div class="track-name">Ocean Drive</div><div class="track-artist">Duke Dumont</div></div></div><div class="track-album">Ocean Drive EP</div><div class="track-duration">4:12</div><div class="track-heart"><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg></div></div>
+            <div class="track-row" onclick="playTrack(6)"><div class="track-num">2</div><div class="track-info"><div class="track-art"><div class="track-art-bg" style="background:linear-gradient(135deg,#111827,#f97316);"></div></div><div class="track-details"><div class="track-name">Sunset Boulevard</div><div class="track-artist">Glass Animals</div></div></div><div class="track-album">Dreamland</div><div class="track-duration">3:18</div><div class="track-heart"><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg></div></div>
+            <div class="track-row" onclick="playTrack(8)"><div class="track-num">3</div><div class="track-info"><div class="track-art"><div class="track-art-bg" style="background:linear-gradient(135deg,#0f766e,#06b6d4);"></div></div><div class="track-details"><div class="track-name">Low Tide</div><div class="track-artist">Tycho</div></div></div><div class="track-album">Awake</div><div class="track-duration">4:26</div><div class="track-heart"><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:18px;">
+        <div class="section-header" style="margin-bottom:14px;">
+          <div class="section-title" style="font-size:18px;">Stations for you</div>
+          <div class="section-link">Browse →</div>
+        </div>
+        <div style="display:grid;grid-template-columns: repeat(4, 1fr);gap:14px;">
+          <div style="border:1px solid var(--border);background:linear-gradient(135deg, rgba(14,165,233,0.22), rgba(255,255,255,0.02));border-radius:14px;padding:14px;cursor:pointer;" onclick="startRadio()">
+            <div style="font-family:'Clash Display',sans-serif;font-size:16px;font-weight:650;">Lo-fi Lounge</div>
+            <div style="font-size:12px;color:var(--muted2);margin-top:4px;">Focus & chill</div>
+          </div>
+          <div style="border:1px solid var(--border);background:linear-gradient(135deg, rgba(249,115,22,0.22), rgba(255,255,255,0.02));border-radius:14px;padding:14px;cursor:pointer;" onclick="startRadio()">
+            <div style="font-family:'Clash Display',sans-serif;font-size:16px;font-weight:650;">Energy Mix</div>
+            <div style="font-size:12px;color:var(--muted2);margin-top:4px;">Upbeat hits</div>
+          </div>
+          <div style="border:1px solid var(--border);background:linear-gradient(135deg, rgba(34,197,94,0.20), rgba(255,255,255,0.02));border-radius:14px;padding:14px;cursor:pointer;" onclick="startRadio()">
+            <div style="font-family:'Clash Display',sans-serif;font-size:16px;font-weight:650;">Nature Calm</div>
+            <div style="font-size:12px;color:var(--muted2);margin-top:4px;">Ambient</div>
+          </div>
+          <div style="border:1px solid var(--border);background:linear-gradient(135deg, rgba(236,72,153,0.18), rgba(255,255,255,0.02));border-radius:14px;padding:14px;cursor:pointer;" onclick="startRadio()">
+            <div style="font-family:'Clash Display',sans-serif;font-size:16px;font-weight:650;">Neon Drive</div>
+            <div style="font-size:12px;color:var(--muted2);margin-top:4px;">Synthwave</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="exploreView" class="view is-hidden">
+    <div class="section explore" style="padding-top: 6px;">
+      <!-- Hero -->
+      <section class="explore-hero">
+        <div class="explore-hero-media">
+          <img class="explore-hero-img" alt="Curated Waves" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAU3Bper3T5AOeshwrHOg_Avau5dK-z8ObKXnW3u7jAkjdQ35Ha5hQzDTHkRINNLrWDn3RbO1eM1ZF8JfeceERDVbjHjtC1hRos37D4uTfCZeXHe7l5y07g3ztRm-zrIZBzsyU1y_4Z9mV6AEQPzbRC7Wx_LMBR18PJFxvuNKwyd7wS1kBRbFAk4ugg5roeqHS0U335FXXVzv41AWM_AG8d_LBXlp5j51JigZc5nrcamaHs1rkssaMVuoYZiwKObhtJAuMlnA8wKtjx"/>
+          <div class="explore-hero-overlay"></div>
+        </div>
+        <div class="explore-hero-content">
+          <span class="explore-pill">Live Discovery</span>
+          <h2 class="explore-hero-title">Curated Waves: <span class="explore-hero-accent">Techno Bunker</span></h2>
+          <p class="explore-hero-sub">Streaming live. Deep, driving rhythms curated by the Soundwave algorithm.</p>
+          <div class="explore-hero-actions">
+            <button class="explore-primary" onclick="startRadio()">Listen now</button>
+            <button class="explore-secondary" onclick="openExplore()">View lineup</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Artist Radio Row -->
+      <section class="explore-block">
+        <div class="explore-rowhead">
+          <h3 class="explore-h3">Artist Radio</h3>
+          <button class="explore-link" onclick="startRadio()">See all →</button>
+        </div>
+        <div class="artist-row">
+          <div class="artist-station" onclick="startRadio()">
+            <div class="artist-ring"><img alt="Radiohead" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCxBw2pPUJz_QAwVOciWJ6On5ik6-4jq7FE43HelUgFyp8pw_OMeJB5EuyvCpZdPvjJ_6R4D_p5yOy5GkrunxsvQgt3SvlaaDO7-YiH7vT9tkKg_z2PSipsG2R5CkMesxPJ144Q6BPcgN7mZZgS0FI_5TlfJuj_1i3G3iknVFx3sAVGb3MyKSW2BG4A8rYBRoPkxcOyXHkEwXGT-_FvpQZiJalGtMFHpGDaf2Jh9Xnt_spMAg7VsXiaNVpCC0BdFhWt3kGnBvMJ4kvZ"/></div>
+            <div class="artist-name">Radiohead</div>
+            <div class="artist-sub">Station</div>
+          </div>
+          <div class="artist-station" onclick="startRadio()">
+            <div class="artist-ring"><img alt="Tame Impala" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC6FC_rSv8D1nDIViz7nXk7aRAM9HNCPrxtonO2zT9vu1NSMX9qmV56UHNw9JFyGHckq6aACduxSh_1nDuGNGWce4JxtQFaAtSjumFQSSqph5weJWDBU1f3fHsrEhywLapX8-e7Zja6yQgjCAteHFsmw9FTuUJMDko2vfkpewIRlGFEWBn94OZDRQZhlyY7rxPl7drJMAshsJfGn3-3Hse9m4INiNgfriBzsh4P1hElWAjglPIWWR9QsM4gWr959grlIUodFrt3SDHj"/></div>
+            <div class="artist-name">Tame Impala</div>
+            <div class="artist-sub">Station</div>
+          </div>
+          <div class="artist-station" onclick="startRadio()">
+            <div class="artist-ring"><img alt="Daft Punk" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB0xWADsGK1doddwUBDh74UvzL4LGYY3IDJ-4VTSjraO4EiFvsOqxcfx8hjAHBtzn8UfSiPzI8bxMY8aqNFUXHlcUB7eqX8ENwtsIZDarME4WT5BacqkEvRv_vMUdfoBgGkdsfB2wMe-TeLWM5dWA2kwAA6-uBNzsDy51YYtlWQfAWBDfFA0GaS0h5JGbm65NjwYSdMAUPZBHC7CnJ_LhWPYYqFxMIYyxpGXf0xX14al299nSPlf5zQ6kMqRL0EcXGLoadkewyH3v2Z"/></div>
+            <div class="artist-name">Daft Punk</div>
+            <div class="artist-sub">Station</div>
+          </div>
+          <div class="artist-station" onclick="startRadio()">
+            <div class="artist-ring"><img alt="Arctic Monkeys" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDx6Gc_7i3Iit7Kx_ChLtMDB3gTlzlmG1IBxxOm14wsJfQ6OeiOyDE4eeoJ7pXok05Oy0bjwp6LJiaZYYIqOWWhcSUcVwOk9RqCiKiue_uJFbeOtfmV8Q5dVO6lkE3DWba4Nsu3qkZuO8SBnR-UCfaqUjc_-1GYDOX0kbQ4uv6svQCGvS2f08Y1Qhq8Mi0qA6w48K_tQr7biMNzD0OALfnLeakb7lPyMwTtXmSM_0mAdVBjCOX0PoBOda28iSuz3pswmNLVEiCsjyfb"/></div>
+            <div class="artist-name">Arctic Monkeys</div>
+            <div class="artist-sub">Station</div>
+          </div>
+          <div class="artist-station" onclick="startRadio()">
+            <div class="artist-ring"><img alt="Lana Del Rey" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBtcI0tQ4XfW6MDWHTbpp5LXfCIMUWysa2dTLx8rCmvtsEY_TcgbRs0kuaekD6lt-Xr2Ate8Qgj3ps55wYSvFo35Pzn_zPJiUqE7wrFbn6XrPOO27I1xvWPBNgnXtZovi5caleeZlTAN9XaUU0UELAaaKdOY3n1FvEshat3lVzE8QyJhE5e02zovwadarv9h2n91euDbc8UkC8YximoyB965b8Vvb3MrjwYzdKjaR0Zy-uUr5Zb6mXFU7I8DpoSKHdMjbSx8rUgiNf-"/></div>
+            <div class="artist-name">Lana Del Rey</div>
+            <div class="artist-sub">Station</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Explore Genres: Bento Grid -->
+      <section class="explore-block">
+        <h3 class="explore-h3">Explore Genres</h3>
+        <div class="bento">
+          <div class="bento-tile bento-electronic" onclick="startRadio()">
+            <img alt="Electronic" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCIYIfyYaQkRcTmK6NitdMQ7PjopNn9ias-A-8K2BrTb13BZsIacLo1tNgn96RS2-e4gAzb4sf-f1I1PjMIlEJWMNjXnBgf02Ef2FTnLtTl61Z99ufa6_MEV4UX4Duqz4WDi1wYWppodQQbegQKgkQ2vpVrAQOH1y9_63A2hevvZES28CgnaV8KzK-Zvzj5A5jMohYOQwpVIgcqM6YNYz-C44jDznw2hmIFBddz-48Dfce8fbkSrWZLBuHgwDUmDA9SNIo5E8jh7fqE"/>
+            <div class="bento-overlay"></div>
+            <div class="bento-label">
+              <div class="bento-title">ELECTRONIC</div>
+              <div class="bento-sub">2.4k Stations Live</div>
+            </div>
+          </div>
+          <div class="bento-tile bento-rock" onclick="startRadio()">
+            <img alt="Rock" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDUt37VuJpy4P6eDLBMBEG74zds16QWSa6um1_RvDadJiQDxdE8s345-4wIJLf1GOeqZfdAogcz9q6QvBUvSBNsM3_3643e_hC9rSy_p03FD7bjjspTZIBBIpPVwvK4Rh9gti-Vf0WiWCWukz7C0cNMSQ6FvEiqIgPfkU_cxzhWSjIhS9ncM5zePwTWkPSFAnv88QjLHZjQSYAopIL58da39deUPQfzQmpqd9H9gV3eEPpnX2lndQWWIZudrXB_MuAL-zNdOLmRCM9o"/>
+            <div class="bento-overlay"></div>
+            <div class="bento-label"><div class="bento-title">ROCK</div></div>
+          </div>
+          <div class="bento-tile bento-lofi" onclick="startRadio()">
+            <img alt="Lo-fi" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAmgYVU3n0SS8k-zHmIWIxJKFWpI73pGeHkJ8dIxn6Mdow_D6HyUE4D9jwPTbXKKuirm9hASCCj2pG2fXFiv_xFHNE9JOVQfkhFyKtqQQpZIo3LtO8VvQkHuj8OYAW4wLza1Z3LG9Yk1mqmFht30fU6qaTewQ7XQvyPKwHsOKA7ECOA8EUv2mZxSnabo_RhPmF6aogwpWXPXcuqAAsTPqhyZ5Q4DhPyuhCWJAM2ZpEvmumYgpuADUOEfsU0WGjRpWInh0BgH2ajE0Lq"/>
+            <div class="bento-overlay"></div>
+            <div class="bento-label"><div class="bento-title">LO-FI</div></div>
+          </div>
+          <div class="bento-tile bento-classical" onclick="startRadio()">
+            <img alt="Classical" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB6CskkqKHVbu0z3W___zqovgYzNQzwGNdfXrME9_V1lEiPNAYk2nihG9SBzVqTvvmFj1BXiq5HWHJwdhogbTsEAyZnmzz0S4rsucKaRA5Ufb7Y-uhE1sDRSbV3ekOvNholfsC5rCg11hm8j2YqUcre4YynzBUiA75xjN9jFvkOIHzsjavpM4GA0Db9TDco3qhMwrj6oiFvTRSEVYt7rKIIaG3OKySxC9Y3GyaG0n4kCqVKNk485RCG6aOdbUqrihvE2dWLeW_Wxr9P"/>
+            <div class="bento-overlay"></div>
+            <div class="bento-label"><div class="bento-title">CLASSICAL</div></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Local Radio -->
+      <section class="explore-block" style="padding-bottom: 8px;">
+        <h3 class="explore-h3">Local Radio</h3>
+        <div class="local-list">
+          <div class="local-item" onclick="startRadio()">
+            <div class="local-left">
+              <div class="local-icon">📻</div>
+              <div>
+                <div class="local-title">Obsidian FM</div>
+                <div class="local-sub">98.4 MHz · Independent Culture</div>
+              </div>
+            </div>
+            <div class="local-right">
+              <span class="local-badge">Live now</span>
+              <span class="local-mono">8.4k listening</span>
+              <button class="local-play" onclick="event.stopPropagation(); startRadio();">▶</button>
+            </div>
+          </div>
+          <div class="local-item" onclick="startRadio()">
+            <div class="local-left">
+              <div class="local-icon">🎙️</div>
+              <div>
+                <div class="local-title">Urban Pulse London</div>
+                <div class="local-sub">102.1 MHz · Hip-Hop & Soul</div>
+              </div>
+            </div>
+            <div class="local-right">
+              <span class="local-mono">12k listening</span>
+              <button class="local-play" onclick="event.stopPropagation(); startRadio();">▶</button>
+            </div>
+          </div>
+          <div class="local-item" onclick="startRadio()">
+            <div class="local-left">
+              <div class="local-icon">🌊</div>
+              <div>
+                <div class="local-title">K‑Wave FM</div>
+                <div class="local-sub">91.5 MHz · Ambient & Minimal</div>
+              </div>
+            </div>
+            <div class="local-right">
+              <span class="local-mono">2.1k listening</span>
+              <button class="local-play" onclick="event.stopPropagation(); startRadio();">▶</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <div style="height:24px;"></div>
+</main>
+
+<!-- ── PLAYBAR ── -->
+<div class="playbar">
+  <!-- Now playing -->
+  <div class="now-playing">
+    <div class="now-art">
+      <div class="now-art-bg playing" id="nowArtBg" style="background:linear-gradient(135deg,#4c1d95,#7c3aed);"></div>
+    </div>
+    <div class="now-info">
+      <div class="now-title" id="nowTitle">Neon Nights</div>
+      <div class="now-artist" id="nowArtist">The Midnight</div>
+    </div>
+    <div class="now-heart liked" id="nowHeart">
+      <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+    </div>
+  </div>
+
+  <!-- Controls -->
+  <div class="player-center">
+    <div class="player-controls">
+      <button class="ctrl-btn active" title="Shuffle">
+        <svg viewBox="0 0 24 24"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/></svg>
+      </button>
+      <button class="ctrl-btn" title="Previous">
+        <svg viewBox="0 0 24 24"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" y1="19" x2="5" y2="5"/></svg>
+      </button>
+      <button class="play-btn" id="playBtn" onclick="togglePlay()">
+        <svg id="playIcon" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+      </button>
+      <button class="ctrl-btn" title="Next">
+        <svg viewBox="0 0 24 24"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="4" x2="19" y2="20"/></svg>
+      </button>
+      <button class="ctrl-btn" title="Repeat">
+        <svg viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 014-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>
+      </button>
+    </div>
+    <div class="progress-bar-wrap">
+      <span class="time" id="curTime">1:24</span>
+      <div class="progress-track" onclick="seek(event)">
+        <div class="progress-fill" id="progressFill" style="width:37%">
+          <div class="progress-thumb"></div>
+        </div>
+      </div>
+      <span class="time">3:47</span>
+    </div>
+  </div>
+
+  <!-- Right controls -->
+  <div class="player-right">
+    <button class="ctrl-btn">
+      <svg viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 010 14.14"/><path d="M15.54 8.46a5 5 0 010 7.07"/></svg>
+    </button>
+    <div class="vol-wrap">
+      <div class="vol-track" onclick="setVol(event)">
+        <div class="vol-fill" id="volFill"></div>
+      </div>
+    </div>
+    <button class="ctrl-btn">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+    </button>
+  </div>
+</div>
+
+<script>
+  const tracks = [
+    { title: 'Neon Nights', artist: 'The Midnight', bg: 'linear-gradient(135deg,#4c1d95,#7c3aed)', duration: 227, liked: true },
+    { title: 'Ocean Drive', artist: 'Duke Dumont', bg: 'linear-gradient(135deg,#0c4a6e,#0ea5e9)', duration: 252, liked: false },
+    { title: 'Wildfire', artist: 'Lana Del Rey', bg: 'linear-gradient(135deg,#7f1d1d,#dc2626)', duration: 302, liked: false },
+    { title: 'Verdant', artist: 'Bonobo', bg: 'linear-gradient(135deg,#064e3b,#10b981)', duration: 378, liked: false },
+    { title: 'Golden Hour', artist: 'Kacey Musgraves', bg: 'linear-gradient(135deg,#78350f,#f59e0b)', duration: 215, liked: true },
+    { title: 'Midnight City Lights', artist: 'M83', bg: 'linear-gradient(135deg,#1f2937,#6366f1)', duration: 243, liked: false },
+    { title: 'Sunset Boulevard', artist: 'Glass Animals', bg: 'linear-gradient(135deg,#111827,#f97316)', duration: 198, liked: false },
+    { title: 'Pulse Runner', artist: 'Kavinsky', bg: 'linear-gradient(135deg,#312e81,#22c55e)', duration: 238, liked: true },
+    { title: 'Low Tide', artist: 'Tycho', bg: 'linear-gradient(135deg,#0f766e,#06b6d4)', duration: 266, liked: false },
+    { title: 'Afterglow', artist: 'Tove Lo', bg: 'linear-gradient(135deg,#7c2d12,#fb7185)', duration: 204, liked: false },
+  ];
+
+  let currentTrack = 0;
+  let isPlaying = true;
+  let progress = 37;
+  let timer;
+
+  function fmt(s) {
+    return Math.floor(s/60) + ':' + String(Math.floor(s%60)).padStart(2,'0');
+  }
+
+  function playTrack(idx) {
+    currentTrack = idx;
+    const t = tracks[idx];
+    document.getElementById('nowTitle').textContent = t.title;
+    document.getElementById('nowArtist').textContent = t.artist;
+    document.getElementById('nowArtBg').style.background = t.bg;
+
+    const heart = document.getElementById('nowHeart');
+    heart.classList.toggle('liked', t.liked);
+
+    isPlaying = true;
+    updatePlayBtn();
+    progress = 0;
+    updateProgress();
+    startTimer();
+
+    document.querySelectorAll('.track-row').forEach((r,i) => {
+      r.classList.toggle('playing', i === idx);
+    });
+  }
+
+  function togglePlay() {
+    isPlaying = !isPlaying;
+    updatePlayBtn();
+    if (isPlaying) startTimer(); else clearInterval(timer);
+  }
+
+  function updatePlayBtn() {
+    const icon = document.getElementById('playIcon');
+    const btn = document.getElementById('playBtn');
+    const art = document.getElementById('nowArtBg');
+    if (isPlaying) {
+      icon.innerHTML = '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>';
+      art.classList.add('playing');
+    } else {
+      icon.innerHTML = '<polygon points="5 3 19 12 5 21 5 3"/>';
+      art.classList.remove('playing');
+    }
+  }
+
+  function updateProgress() {
+    const t = tracks[currentTrack];
+    const pct = (progress / t.duration) * 100;
+    document.getElementById('progressFill').style.width = pct + '%';
+    document.getElementById('curTime').textContent = fmt(progress);
+  }
+
+  function startTimer() {
+    clearInterval(timer);
+    timer = setInterval(() => {
+      const t = tracks[currentTrack];
+      if (progress < t.duration) {
+        progress++;
+        updateProgress();
+      } else {
+        clearInterval(timer);
+      }
+    }, 1000);
+  }
+
+  function seek(e) {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const pct = (e.clientX - rect.left) / rect.width;
+    progress = Math.floor(pct * tracks[currentTrack].duration);
+    updateProgress();
+  }
+
+  function setVol(e) {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const pct = ((e.clientX - rect.left) / rect.width) * 100;
+    document.getElementById('volFill').style.width = Math.max(0, Math.min(100, pct)) + '%';
+  }
+
+  // Chips
+  document.querySelectorAll('.hero .chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      document.querySelectorAll('.hero .chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+
+      const label = (chip.textContent || '').trim().toLowerCase();
+      const theme =
+        label === 'podcasts' ? 'podcasts' :
+        label === 'audiobooks' ? 'audiobooks' :
+        label === 'mixes' ? 'mixes' :
+        label === 'music' ? 'music' :
+        'music'; // All -> default
+      document.body.dataset.theme = theme;
+    });
+  });
+
+  // Waveform decoration
+  const waveDeco = document.getElementById('waveDeco');
+  const heights = [18,32,22,40,28,14,36,24,42,18,30,20,38,26,16];
+  heights.forEach(h => {
+    const bar = document.createElement('div');
+    bar.className = 'w-bar';
+    bar.style.height = h + 'px';
+    waveDeco.appendChild(bar);
+  });
+
+  // Heart toggles on track rows
+  document.querySelectorAll('.track-heart').forEach(h => {
+    h.addEventListener('click', e => {
+      e.stopPropagation();
+      h.classList.toggle('liked');
+    });
+  });
+
+  // Search (filters tracks + albums)
+  const searchInput = document.getElementById('searchInput');
+  function applySearchFilter(raw) {
+    const q = (raw || '').trim().toLowerCase();
+    const hasQuery = q.length > 0;
+
+    // Tracks (Trending Now)
+    const trackRows = Array.from(document.querySelectorAll('.track-list .track-row'));
+    trackRows.forEach(row => {
+      const name = row.querySelector('.track-name')?.textContent || '';
+      const artist = row.querySelector('.track-artist')?.textContent || '';
+      const album = row.querySelector('.track-album')?.textContent || '';
+      const hay = `${name} ${artist} ${album}`.toLowerCase();
+      row.style.display = !hasQuery || hay.includes(q) ? '' : 'none';
+    });
+
+    // Albums (New Releases)
+    const albumCards = Array.from(document.querySelectorAll('.album-grid .album-card'));
+    albumCards.forEach(card => {
+      const name = card.querySelector('.album-name')?.textContent || '';
+      const artist = card.querySelector('.album-artist')?.textContent || '';
+      const hay = `${name} ${artist}`.toLowerCase();
+      card.style.display = !hasQuery || hay.includes(q) ? '' : 'none';
+    });
+  }
+
+  if (searchInput) {
+    searchInput.addEventListener('input', (e) => applySearchFilter(e.target.value));
+    searchInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        searchInput.value = '';
+        applySearchFilter('');
+        searchInput.blur();
+      }
+      if (e.key === 'Enter') {
+        const firstVisible = Array.from(document.querySelectorAll('.track-list .track-row'))
+          .find(r => r.style.display !== 'none');
+        if (firstVisible) firstVisible.click();
+      }
+    });
+  }
+
+  // Sidebar "Search" interaction (focuses main search bar)
+  const sidebarSearch = document.getElementById('sidebarSearch');
+  const sidebarHome = document.getElementById('sidebarHome');
+  const sidebarRadio = document.getElementById('sidebarRadio');
+  const sidebarExplore = document.getElementById('sidebarExplore');
+  const themeToggle = document.getElementById('themeToggle');
+  const homeView = document.getElementById('homeView');
+  const radioView = document.getElementById('radioView');
+  const exploreView = document.getElementById('exploreView');
+
+  function updateThemeToggleText() {
+    if (!themeToggle) return;
+    themeToggle.textContent = document.body.dataset.scheme === 'light' ? 'Dark' : 'Light';
+  }
+  if (themeToggle) {
+    updateThemeToggleText();
+    themeToggle.addEventListener('click', () => {
+      const next = document.body.dataset.scheme === 'light' ? 'dark' : 'light';
+      document.body.dataset.scheme = next;
+      localStorage.setItem('soundwave-scheme', next);
+      updateThemeToggleText();
+    });
+  }
+
+  function setView(next) {
+    const views = { home: homeView, radio: radioView, explore: exploreView };
+    const show = views[next] || views.home;
+    if (!show) return;
+
+    const hide = Object.values(views).find(v => v && !v.classList.contains('is-hidden') && v !== show);
+    if (hide === show) return;
+
+    // Show incoming view
+    show.classList.remove('is-hidden', 'anim-out');
+    show.classList.add('anim-in');
+
+    // Animate outgoing view then hide
+    if (hide) {
+      hide.classList.remove('anim-in');
+      hide.classList.add('anim-out');
+      window.setTimeout(() => {
+        hide.classList.add('is-hidden');
+        hide.classList.remove('anim-out');
+      }, 360);
+    }
+
+    window.setTimeout(() => show.classList.remove('anim-in'), 360);
+    document.body.dataset.view = next;
+  }
+
+  function activateSidebarItem(el) {
+    if (!el) return;
+    document.querySelectorAll('.nav .nav-item').forEach(i => i.classList.remove('active'));
+    el.classList.add('active');
+  }
+  function focusSearch() {
+    if (!searchInput) return;
+    setView('home');
+    activateSidebarItem(sidebarSearch);
+    searchInput.focus();
+    searchInput.select();
+  }
+  function goHome() {
+    activateSidebarItem(sidebarHome);
+    setView('home');
+    if (searchInput) {
+      searchInput.value = '';
+      applySearchFilter('');
+      searchInput.blur();
+    }
+    document.querySelector('.main')?.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  function startRadio() {
+    activateSidebarItem(sidebarRadio);
+    setView('radio');
+    if (searchInput) {
+      searchInput.value = '';
+      applySearchFilter('');
+      searchInput.blur();
+    }
+    const idx = Math.floor(Math.random() * tracks.length);
+    playTrack(idx);
+    document.querySelector('.main')?.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  function openExplore() {
+    activateSidebarItem(sidebarExplore);
+    setView('explore');
+    if (searchInput) {
+      searchInput.value = '';
+      applySearchFilter('');
+      searchInput.blur();
+    }
+    document.querySelector('.main')?.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  if (sidebarSearch) {
+    sidebarSearch.addEventListener('click', (e) => {
+      e.preventDefault();
+      focusSearch();
+    });
+    sidebarSearch.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        focusSearch();
+      }
+    });
+  }
+  if (sidebarHome) {
+    sidebarHome.addEventListener('click', (e) => {
+      e.preventDefault();
+      goHome();
+    });
+    sidebarHome.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        goHome();
+      }
+    });
+  }
+  if (sidebarRadio) {
+    sidebarRadio.addEventListener('click', (e) => {
+      e.preventDefault();
+      startRadio();
+    });
+    sidebarRadio.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        startRadio();
+      }
+    });
+  }
+  if (sidebarExplore) {
+    sidebarExplore.addEventListener('click', (e) => {
+      e.preventDefault();
+      openExplore();
+    });
+    sidebarExplore.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        openExplore();
+      }
+    });
+  }
+
+  document.getElementById('nowHeart').addEventListener('click', () => {
+    const heart = document.getElementById('nowHeart');
+    heart.classList.toggle('liked');
+    tracks[currentTrack].liked = heart.classList.contains('liked');
+  });
+
+  // Init
+  document.body.dataset.view = document.body.dataset.view || 'home';
+  startTimer();
+</script>
+</body>
+</html>
